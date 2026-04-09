@@ -7,7 +7,20 @@ const shiprocketWebhookRouter = require("./routes/shiprocketWebhook");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://fastion-alpha.vercel.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  }
+}));
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
