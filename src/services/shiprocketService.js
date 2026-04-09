@@ -18,23 +18,6 @@ function normalizeDigits(value) {
   return s.replace(/[^\d]/g, "");
 }
 
-function normalizeIndianPhone(value) {
-  let phone = normalizeDigits(value);
-  phone = phone.replace(/^0+/, "");
-  if (phone.length > 10) {
-    phone = phone.slice(-10);
-  }
-  if (phone.length !== 10) {
-    return "9876543210";
-  }
-  return phone;
-}
-
-function normalizeIndianPincode(value) {
-  const pin = normalizeDigits(value);
-  return pin.length === 6 ? pin : "395006";
-}
-
 function isDebugEnabled() {
   const flag = toNonEmptyString(process.env.SHIPROCKET_DEBUG, "").toLowerCase();
   if (flag === "1" || flag === "true" || flag === "yes") return true;
@@ -70,13 +53,14 @@ function mapOrderToShiprocketPayload(order) {
     "Near Landmark"
   );
 
-  const billingPhone = normalizeIndianPhone(
+  let billingPhone = normalizeDigits(
     customer.phone || address.phoneNumber || address.phone
   );
+  billingPhone = billingPhone.replace(/^0+/, "");
 
   const billingEmail = toNonEmptyString(customer.email || address.email, "test@gmail.com");
 
-  const billingPincode = normalizeIndianPincode(address.pincode);
+  const billingPincode = normalizeDigits(address.pincode);
   const billingCity = toNonEmptyString(address.city, "Surat");
   const billingState = toNonEmptyString(address.state, "Gujarat");
   const billingCountry = "India";
@@ -107,11 +91,11 @@ function mapOrderToShiprocketPayload(order) {
     billing_address: billingAddress,
     billing_address_2: billingAddress2,
     billing_city: billingCity,
-    billing_pincode: billingPincode,
+    billing_pincode: billingPincode || "395006",
     billing_state: billingState,
     billing_country: billingCountry,
     billing_email: billingEmail,
-    billing_phone: billingPhone,
+    billing_phone: billingPhone || "9876543210",
 
     shipping_is_billing: true,
 
