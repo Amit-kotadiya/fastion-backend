@@ -4,9 +4,7 @@ var path = require("path");
 
 require("dotenv").config({
   path: path.resolve(__dirname, "../.env")
-}); // console.log("ENV EMAIL:", process.env.SHIPROCKET_EMAIL);
-// console.log("ENV PASS:", process.env.SHIPROCKET_PASSWORD);
-
+});
 
 var app = require("./app");
 
