@@ -15,13 +15,20 @@ var admin = require("firebase-admin");
 var collectionName = process.env.ORDERS_COLLECTION || "order";
 
 function getCredentials() {
-  var filePath = path.join(__dirname, "../../firebase-key.json");
-  console.log("Firebase Key Path:", filePath);
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }
+
+  var defaultPath = path.join(__dirname, "../../firebase-key.json");
+  var filePath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH ? path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH) : defaultPath;
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error("Missing Firebase credentials. Set FIREBASE_SERVICE_ACCOUNT_JSON, FIREBASE_SERVICE_ACCOUNT_PATH, " + "or add a service account file at ".concat(defaultPath, "."));
+  }
+
   var raw = fs.readFileSync(filePath, "utf8");
   return JSON.parse(raw);
 }
-
-throw new Error("Missing Firebase credentials. Configure FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH.");
 
 if (!admin.apps.length) {
   var serviceAccount = getCredentials();

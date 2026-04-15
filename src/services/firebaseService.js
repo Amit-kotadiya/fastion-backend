@@ -36,7 +36,7 @@ function getCredentials() {
 
       "Missing Firebase credentials. Set FIREBASE_SERVICE_ACCOUNT_JSON, FIREBASE_SERVICE_ACCOUNT_PATH, " +
 
-        `or add a service account file at ${defaultPath}.`
+      `or add a service account file at ${defaultPath}.`
 
     );
 
