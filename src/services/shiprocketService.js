@@ -99,12 +99,26 @@ function mapOrderToShiprocketPayload(order) {
 
     shipping_is_billing: true,
 
-    order_items: items.map((item, idx) => ({
-      name: toNonEmptyString(item.name || item.title, `Item-${idx + 1}`),
-      sku: toNonEmptyString(item.sku || item.productId || item.id, "SKU"),
-      units: Math.max(1, Math.floor(toNumber(item.quantity, 1))),
-      selling_price: toNumber(item.discountPrice ?? item.salePrice ?? item.price, 100),
-    })),
+    order_items: items.map((item, idx) => {
+      let itemName = toNonEmptyString(item.name || item.title, `Item-${idx + 1}`);
+
+      // Add size information if available
+      if (item.selectedSizes) {
+        const sizes = [];
+        if (item.selectedSizes.pant) sizes.push(`Pant: ${item.selectedSizes.pant}`);
+        if (item.selectedSizes.shirt) sizes.push(`Shirt: ${item.selectedSizes.shirt}`);
+        if (sizes.length > 0) {
+          itemName = `${itemName} (${sizes.join(", ")})`;
+        }
+      }
+
+      return {
+        name: itemName,
+        sku: toNonEmptyString(item.sku || item.productId || item.id, "SKU"),
+        units: Math.max(1, Math.floor(toNumber(item.quantity, 1))),
+        selling_price: toNumber(item.discountPrice ?? item.salePrice ?? item.price, 100),
+      };
+    }),
 
     payment_method: paymentMethod,
     sub_total: subTotal,

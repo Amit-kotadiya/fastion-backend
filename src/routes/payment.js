@@ -48,13 +48,13 @@ router.post("/create-order", async (req, res) => {
 
         const order = await razorpay.orders.create(options);
 
-        await db.collection("orders").doc(order.id).set({
-            razorpayOrderId: order.id,
-            userId,
-            amount,
-            status: "pending",
-            createdAt: Timestamp.now(),
-        });
+        // await db.collection("orders").doc(order.id).set({
+        //     razorpayOrderId: order.id,
+        //     userId,
+        //     amount,
+        //     status: "pending",
+        //     createdAt: Timestamp.now(),
+        // });
 
         return res.status(200).json({
             orderId: order.id,
