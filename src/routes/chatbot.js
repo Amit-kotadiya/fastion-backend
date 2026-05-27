@@ -27,6 +27,7 @@ async function fetchFirebaseContext() {
             context.products.push({
                 name: p.title || p.name || "",
                 price: p.price || "",
+                discountPrice: p.discountPrice || "",
                 category: p.category || "",
                 description: (p.description || "").substring(0, 100),
             });
@@ -77,7 +78,11 @@ Neeche di gayi REAL website information se SIRF jawab do.
         prompt += `\n🛍️ PRODUCTS (${firebaseCtx.products.length} items):\n`;
         firebaseCtx.products.forEach(p => {
             prompt += `- ${p.name}`;
-            if (p.price) prompt += ` | ₹${p.price}`;
+            if (p.discountPrice) {
+                prompt += ` | Actual Price: ₹${p.discountPrice} (MRP: ₹${p.price})`;
+            } else if (p.price) {
+                prompt += ` | Price: ₹${p.price}`;
+            }
             if (p.category) prompt += ` | ${p.category}`;
             if (p.description) prompt += ` | ${p.description}`;
             prompt += `\n`;
