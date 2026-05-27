@@ -46,6 +46,8 @@ var shiprocketWebhookRouter = require("./routes/shiprocketWebhook");
 
 var paymentRoutes = require("./routes/payment");
 
+var chatbotRoutes = require("./routes/chatbot");
+
 var app = express();
 var allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000", "https://fastion-alpha.vercel.app"];
 app.use(cors({
@@ -74,6 +76,7 @@ app.get("/health", function (_req, res) {
 app.use("/api/orders", ordersRouter);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/webhooks/shiprocket", shiprocketWebhookRouter);
+app.use("/api/chatbot", chatbotRoutes);
 app.use(function (error, _req, res, _next) {
   console.error("Unhandled error:", error);
   res.status(500).json({

@@ -174,7 +174,6 @@ router.post("/verify", async (req, res) => {
             return res.status(400).json({ success: false, error: "Missing payment fields" });
         }
 
-        // Signature check karo
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expected = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
