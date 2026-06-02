@@ -114,7 +114,18 @@ function mapOrderToShiprocketPayload(order) {
 
       return {
         name: itemName,
-        sku: toNonEmptyString(item.sku || item.productId || item.id, "SKU"),
+        // sku: toNonEmptyString(item.sku || item.productId || item.id, "SKU"),
+        sku: (() => {
+          const baseSku = toNonEmptyString(item.sku || item.productId || item.id, "SKU");
+          if (!item.selectedSizes || Object.keys(item.selectedSizes).length === 0) {
+            return `${baseSku}-${idx}`;
+          }
+          const pantSize = item.selectedSizes?.pant ? `P${item.selectedSizes.pant}` : "";
+          const shirtSize = item.selectedSizes?.shirt ? `S${item.selectedSizes.shirt}` : "";
+          const tshirtSize = item.selectedSizes?.tshirt ? `T${item.selectedSizes.tshirt}` : "";
+          const sizeSuffix = [pantSize, shirtSize, tshirtSize].filter(Boolean).join("-");
+          return sizeSuffix ? `${baseSku}-${sizeSuffix}` : `${baseSku}-${idx}`;
+        })(),
         units: Math.max(1, Math.floor(toNumber(item.quantity, 1))),
         selling_price: toNumber(item.discountPrice ?? item.salePrice ?? item.price, 100),
       };
