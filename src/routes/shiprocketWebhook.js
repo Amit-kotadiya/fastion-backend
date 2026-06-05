@@ -22,13 +22,26 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ success: false, message: "shipment_id is required" });
     }
 
+    // const shippingStatus = mapShiprocketStatus(currentStatus);
+    // const updated = await updateOrderByShipmentStatus(String(shipmentId), {
+    //   shippingStatus,
+    //   shiprocketStatus: currentStatus || null,
+    //   shippingRaw: payload,
+    // });
     const shippingStatus = mapShiprocketStatus(currentStatus);
+
+    const extraUpdates = {};
+    if (currentStatus === "Delivered" || shippingStatus === "DELIVERED") {
+      extraUpdates.status = "Delivered";
+      extraUpdates.deliveredAt = new Date().toISOString();
+    }
+
     const updated = await updateOrderByShipmentStatus(String(shipmentId), {
       shippingStatus,
       shiprocketStatus: currentStatus || null,
       shippingRaw: payload,
+      ...extraUpdates,
     });
-
     return res.status(200).json({ success: true, updated });
   } catch (error) {
     // eslint-disable-next-line no-console
