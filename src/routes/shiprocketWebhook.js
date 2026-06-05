@@ -19,7 +19,8 @@ router.post("/", async (req, res) => {
     const shipmentId = payload.shipment_id || payload.shipmentId;
     const currentStatus = payload.current_status || payload.status;
     if (!shipmentId) {
-      return res.status(400).json({ success: false, message: "shipment_id is required" });
+      console.log("⚠️ Test webhook received — no shipment_id");
+      return res.status(200).json({ success: true, message: "Test webhook received" });
     }
 
     // const shippingStatus = mapShiprocketStatus(currentStatus);

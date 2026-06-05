@@ -47,16 +47,17 @@ router.post("/", function _callee(req, res) {
           currentStatus = payload.current_status || payload.status;
 
           if (shipmentId) {
-            _context.next = 11;
+            _context.next = 12;
             break;
           }
 
-          return _context.abrupt("return", res.status(400).json({
-            success: false,
-            message: "shipment_id is required"
+          console.log("⚠️ Test webhook received — no shipment_id");
+          return _context.abrupt("return", res.status(200).json({
+            success: true,
+            message: "Test webhook received"
           }));
 
-        case 11:
+        case 12:
           // const shippingStatus = mapShiprocketStatus(currentStatus);
           // const updated = await updateOrderByShipmentStatus(String(shipmentId), {
           //   shippingStatus,
@@ -71,22 +72,22 @@ router.post("/", function _callee(req, res) {
             extraUpdates.deliveredAt = new Date().toISOString();
           }
 
-          _context.next = 16;
+          _context.next = 17;
           return regeneratorRuntime.awrap(updateOrderByShipmentStatus(String(shipmentId), _objectSpread({
             shippingStatus: shippingStatus,
             shiprocketStatus: currentStatus || null,
             shippingRaw: payload
           }, extraUpdates)));
 
-        case 16:
+        case 17:
           updated = _context.sent;
           return _context.abrupt("return", res.status(200).json({
             success: true,
             updated: updated
           }));
 
-        case 20:
-          _context.prev = 20;
+        case 21:
+          _context.prev = 21;
           _context.t0 = _context["catch"](0);
           // eslint-disable-next-line no-console
           console.error("Webhook error:", _context.t0.message);
@@ -94,12 +95,12 @@ router.post("/", function _callee(req, res) {
             success: false
           }));
 
-        case 24:
+        case 25:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 20]]);
+  }, null, null, [[0, 21]]);
 });
 module.exports = router;
 //# sourceMappingURL=shiprocketWebhook.dev.js.map
