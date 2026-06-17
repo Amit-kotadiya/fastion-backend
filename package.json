@@ -9,7 +9,7 @@
     "lint": "node --check src/index.js && node --check src/app.js && node --check src/routes/orders.js && node --check src/routes/razorpayPayments.js && node --check src/routes/shiprocketWebhook.js && node --check src/services/orderCreationService.js && node --check src/services/shiprocketClient.js && node --check src/services/shiprocketService.js && node --check src/services/firebaseService.js && node --check src/utils/statusMapper.js"
   },
   "dependencies": {
-    "axios": "^1.9.0",
+    "axios": "^1.18.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

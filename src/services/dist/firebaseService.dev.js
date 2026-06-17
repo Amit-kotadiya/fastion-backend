@@ -6,6 +6,80 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+// const fs = require("fs");
+// const path = require("path");
+// const admin = require("firebase-admin");
+// const collectionName = process.env.ORDERS_COLLECTION || "order";
+// function getCredentials() {
+//   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+//     return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+//   }
+//   const defaultPath = path.join(__dirname, "../../firebase-key.json");
+//   const filePath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+//     ? path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+//     : defaultPath;
+//   if (!fs.existsSync(filePath)) {
+//     throw new Error(
+//       "Missing Firebase credentials. Set FIREBASE_SERVICE_ACCOUNT_JSON, FIREBASE_SERVICE_ACCOUNT_PATH, " +
+//       `or add a service account file at ${defaultPath}.`
+//     );
+//   }
+//   const raw = fs.readFileSync(filePath, "utf8");
+//   return JSON.parse(raw);
+// }
+// if (!admin.apps.length) {
+//   const serviceAccount = getCredentials();
+//   admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount),
+//   });
+// }
+// const db = admin.firestore();
+// async function saveOrderToFirestore(order) {
+//   const ref = db.collection(collectionName).doc();
+//   const data = {
+//     ...order,
+//     id: ref.id,
+//     shippingStatus: order.shippingStatus || "PENDING",
+//     createdAt: new Date().toISOString(),
+//   };
+//   await ref.set(data);
+//   return data;
+// }
+// async function getOrderById(orderId) {
+//   const doc = await db.collection(collectionName).doc(orderId).get();
+//   if (!doc.exists) {
+//     return null;
+//   }
+//   return { id: doc.id, ...doc.data() };
+// }
+// async function updateOrderShiprocketData(orderId, updates) {
+//   await db.collection(collectionName).doc(orderId).update({
+//     ...updates,
+//     updatedAt: new Date().toISOString(),
+//   });
+// }
+// async function updateOrderByShipmentStatus(shipmentId, updates) {
+//   const snap = await db
+//     .collection(collectionName)
+//     .where("shiprocketShipmentId", "==", shipmentId)
+//     .limit(1)
+//     .get();
+//   if (snap.empty) {
+//     return false;
+//   }
+//   const doc = snap.docs[0];
+//   await doc.ref.update({
+//     ...updates,
+//     updatedAt: new Date().toISOString(),
+//   });
+//   return true;
+// }
+// module.exports = {
+//   saveOrderToFirestore,
+//   getOrderById,
+//   updateOrderShiprocketData,
+//   updateOrderByShipmentStatus,
+// };
 var fs = require("fs");
 
 var path = require("path");
@@ -152,10 +226,43 @@ function updateOrderByShipmentStatus(shipmentId, updates) {
   });
 }
 
+function getOrderByShipmentId(shipmentId) {
+  var snap;
+  return regeneratorRuntime.async(function getOrderByShipmentId$(_context5) {
+    while (1) {
+      switch (_context5.prev = _context5.next) {
+        case 0:
+          _context5.next = 2;
+          return regeneratorRuntime.awrap(db.collection(collectionName).where("shiprocketShipmentId", "==", shipmentId).limit(1).get());
+
+        case 2:
+          snap = _context5.sent;
+
+          if (!snap.empty) {
+            _context5.next = 5;
+            break;
+          }
+
+          return _context5.abrupt("return", null);
+
+        case 5:
+          return _context5.abrupt("return", _objectSpread({
+            id: snap.docs[0].id
+          }, snap.docs[0].data()));
+
+        case 6:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  });
+}
+
 module.exports = {
   saveOrderToFirestore: saveOrderToFirestore,
   getOrderById: getOrderById,
   updateOrderShiprocketData: updateOrderShiprocketData,
-  updateOrderByShipmentStatus: updateOrderByShipmentStatus
+  updateOrderByShipmentStatus: updateOrderByShipmentStatus,
+  getOrderByShipmentId: getOrderByShipmentId
 };
 //# sourceMappingURL=firebaseService.dev.js.map
