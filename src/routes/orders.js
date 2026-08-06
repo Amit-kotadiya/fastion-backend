@@ -23,7 +23,6 @@ router.post("/create", async (req, res) => {
         ? shiprocketError.response.data
         : shiprocketError.message;
 
-      // eslint-disable-next-line no-console
       console.error("Shiprocket create order failed:", shiprocketErrorPayload);
 
       await updateOrderShiprocketData(savedOrder.id, {
@@ -40,7 +39,6 @@ router.post("/create", async (req, res) => {
       shiprocketError: shiprocketErrorPayload,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error("Order create failed:", error.response ? error.response.data : error.message);
     res.status(500).json({ success: false, message: "Order creation failed" });
   }
@@ -64,7 +62,6 @@ router.post("/:orderId/sync-shiprocket", async (req, res) => {
     const shiprocket = await createShiprocketOrder(order);
     return res.status(200).json({ success: true, shiprocket });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error("Shiprocket sync failed:", error.response ? error.response.data : error.message);
     return res.status(500).json({ success: false, message: "Shiprocket sync failed" });
   }
@@ -91,7 +88,6 @@ router.post("/:orderId/generate-label", async (req, res) => {
 
     return res.status(200).json({ success: true, label });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(
       "Label generation failed:",
       error.response ? error.response.data : error.message
@@ -134,7 +130,24 @@ router.post("/:orderId/cancel", async (req, res) => {
     return res.status(500).json({ success: false, message: "Cancel failed" });
   }
 });
+// RTO RETURN TO ORIGIN
+router.post("/:orderId/rto", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await getOrderById(orderId);
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
+    await updateOrderShiprocketData(orderId, {
+      status: "RTO",
+      rtoMarkedAt: new Date().toISOString(),
+    });
+
+    return res.status(200).json({ success: true, message: "Order marked as RTO" });
+  } catch (error) {
+    console.error("RTO failed:", error.message);
+    return res.status(500).json({ success: false, message: "RTO update failed" });
+  }
+});
 // RETURN ORDER
 router.post("/:orderId/return", async (req, res) => {
   try {
@@ -188,6 +201,7 @@ router.post("/:orderId/return", async (req, res) => {
     await updateOrderShiprocketData(orderId, {
       returnShiprocketOrderId: returnRes.order_id || null,
       returnStatus: "RETURN_CREATED",
+      status: "Returned",
       shiprocketRawReturn: returnRes,
     });
 

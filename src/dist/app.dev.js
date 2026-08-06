@@ -49,7 +49,7 @@ var paymentRoutes = require("./routes/payment");
 var chatbotRoutes = require("./routes/chatbot");
 
 var app = express();
-var allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000", "https://fastion-alpha.vercel.app"];
+var allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000", "https://fastion-alpha.vercel.app", "https://www.bluedevis.com", "https://bluedevis.com"];
 app.use(cors({
   origin: function origin(_origin, callback) {
     if (!_origin || allowedOrigins.includes(_origin)) {
