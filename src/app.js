@@ -77,7 +77,13 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-app.use(express.json({ limit: "2mb" }));
+// app.use(express.json({ limit: "2mb" }));
+app.use(express.json({
+  limit: "2mb",
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => {

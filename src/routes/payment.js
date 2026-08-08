@@ -193,5 +193,67 @@ router.post("/verify", async (req, res) => {
         return res.status(500).json({ success: false, error: "Verification failed" });
     }
 });
+// WEBHOOK - Razorpay events
+router.post("/webhook", async (req, res) => {
+    try {
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        const signature = req.headers["x-razorpay-signature"];
 
+        if (!signature) {
+            return res.status(400).json({ success: false, error: "Missing signature" });
+        }
+
+        const expectedSignature = crypto
+            .createHmac("sha256", webhookSecret)
+            .update(req.rawBody)
+            .digest("hex");
+
+        if (expectedSignature !== signature) {
+            console.warn("⚠️ Webhook signature mismatch");
+            return res.status(400).json({ success: false, error: "Invalid signature" });
+        }
+
+        const event = req.body;
+        console.log("✅ Verified webhook event:", event.event);
+
+        if (event.event === "payment.captured") {
+            const payment = event.payload.payment.entity;
+            const ordersRef = db.collection("orders");
+            const snapshot = await ordersRef
+                .where("razorpayOrderId", "==", payment.order_id)
+                .limit(1)
+                .get();
+
+            if (!snapshot.empty) {
+                await ordersRef.doc(snapshot.docs[0].id).update({
+                    status: "Confirmed",
+                    paymentStatus: "Captured",
+                    paymentId: payment.id,
+                });
+                console.log("✅ Order updated via webhook");
+            }
+        }
+
+        if (event.event === "payment.failed") {
+            const payment = event.payload.payment.entity;
+            const ordersRef = db.collection("orders");
+            const snapshot = await ordersRef
+                .where("razorpayOrderId", "==", payment.order_id)
+                .limit(1)
+                .get();
+
+            if (!snapshot.empty) {
+                await ordersRef.doc(snapshot.docs[0].id).update({
+                    status: "Payment Failed",
+                    paymentStatus: "Failed",
+                });
+            }
+        }
+
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("❌ Webhook error:", err);
+        return res.status(500).json({ success: false });
+    }
+});
 module.exports = router;
