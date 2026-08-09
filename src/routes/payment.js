@@ -111,7 +111,7 @@ const razorpay = require("../services/razorpayService");
 const admin = require("firebase-admin");
 const db = admin.firestore();
 const { Timestamp } = require("firebase-admin/firestore");
-
+const PREPAID_DISCOUNT_AMOUNT = 50;
 const calculateTotal = (cartItems) => {
     return cartItems.reduce((sum, item) => {
         let price = Number(String(item.price).replace(/[^0-9.]/g, "")) || 0;
@@ -135,14 +135,11 @@ router.post("/create-order", async (req, res) => {
 
         const { cartItems, userId } = req.body;
 
-        console.log("🛒 cartItems:", cartItems);
-        console.log("👤 userId:", userId);
-
         const subtotal = calculateTotal(cartItems);
         console.log("💰 subtotal:", subtotal);
 
-        const shipping = 80;
-        const amount = subtotal + shipping;
+        const shipping = 100;
+        const amount = subtotal - PREPAID_DISCOUNT_AMOUNT + shipping;
 
         const options = {
             amount: Math.round(amount * 100),
