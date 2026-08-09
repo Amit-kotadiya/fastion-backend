@@ -9,9 +9,47 @@ const {
 
 const router = express.Router();
 
+const SHIPPING_CHARGE = 100;
+const PREPAID_DISCOUNT_AMOUNT = 50;
+
+const calculateOrderAmount = (cartItems, paymentMode) => {
+  const subtotal = (cartItems || []).reduce((sum, item) => {
+    let price = Number(String(item.price).replace(/[^0-9.]/g, "")) || 0;
+    let discount = Number(String(item.discountPrice).replace(/[^0-9.]/g, "")) || 0;
+    if (discount > price) [price, discount] = [discount, price];
+    let base = discount > 0 && discount < price ? discount : price;
+
+    const pantSize = Number(item.selectedSizes?.pant);
+    if (pantSize >= 36) base += 50;
+    const shirtSize = item.selectedSizes?.shirt?.toUpperCase();
+    if (shirtSize === "XXL" || shirtSize === "2XL") base += 50;
+
+    return sum + base * (item.quantity || 1);
+  }, 0);
+
+  const shippingCharge = SHIPPING_CHARGE;
+  const prepaidDiscount = paymentMode === "Prepaid" ? PREPAID_DISCOUNT_AMOUNT : 0;
+  const totalAmount = subtotal - prepaidDiscount + shippingCharge;
+
+  return { subtotal, shippingCharge, prepaidDiscount, totalAmount };
+};
+
 router.post("/create", async (req, res) => {
   try {
     const order = req.body;
+
+    if (!order.cartItems || !Array.isArray(order.cartItems) || order.cartItems.length === 0) {
+      return res.status(400).json({ success: false, message: "Cart items missing" });
+    }
+
+    const { subtotal, shippingCharge, prepaidDiscount, totalAmount } =
+      calculateOrderAmount(order.cartItems, order.paymentMode);
+
+    order.subtotal = subtotal;
+    order.shippingCharge = shippingCharge;
+    order.prepaidDiscount = prepaidDiscount;
+    order.totalAmount = totalAmount;
+
     const savedOrder = await saveOrderToFirestore(order);
 
     let shiprocketResult = null;
@@ -34,6 +72,7 @@ router.post("/create", async (req, res) => {
     res.status(201).json({
       success: true,
       orderId: savedOrder.id,
+      totalAmount,
       shiprocketSynced: Boolean(shiprocketResult),
       shiprocket: shiprocketResult,
       shiprocketError: shiprocketErrorPayload,
@@ -43,7 +82,6 @@ router.post("/create", async (req, res) => {
     res.status(500).json({ success: false, message: "Order creation failed" });
   }
 });
-
 router.post("/:orderId/sync-shiprocket", async (req, res) => {
   try {
     const { orderId } = req.params;
