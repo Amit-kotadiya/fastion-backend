@@ -409,7 +409,6 @@ async function createShiprocketOrder(order) {
     "/v1/external/orders/create/adhoc",
     payload
   );
-  const shipmentId = srOrder.shipment_id;
 
   await updateOrderShiprocketData(order.id || order.orderId, {
     shiprocketOrderId: srOrder.order_id || null,
@@ -417,9 +416,8 @@ async function createShiprocketOrder(order) {
     shippingStatus: "ORDER_CREATED",
     shiprocketRawCreateOrder: srOrder,
   });
-  if (shipmentId) {
-    await assignAwbToShipment(shipmentId, order.id || order.orderId);
-  }
+
+
   return srOrder;
 }
 async function assignAwbToShipment(shipmentId, localOrderId) {
