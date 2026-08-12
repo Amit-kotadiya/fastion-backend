@@ -29,7 +29,7 @@ router.post("/", function _callee(req, res) {
             break;
           }
 
-          incomingSecret = req.headers["x-webhook-secret"];
+          incomingSecret = req.headers["x-api-key"];
 
           if (!(incomingSecret !== expectedSecret)) {
             _context.next = 6;

@@ -9,7 +9,7 @@ router.post("/", async (req, res) => {
   try {
     const expectedSecret = process.env.SHIPROCKET_WEBHOOK_SECRET;
     if (expectedSecret) {
-      const incomingSecret = req.headers["x-webhook-secret"];
+      const incomingSecret = req.headers["x-api-key"];
       if (incomingSecret !== expectedSecret) {
         return res.status(401).json({ success: false, message: "Unauthorized webhook" });
       }
