@@ -10,9 +10,9 @@ const {
 const router = express.Router();
 
 const SHIPPING_CHARGE = 100;
-const PREPAID_DISCOUNT_AMOUNT = 50;
+// const PREPAID_DISCOUNT_AMOUNT = 50;
 
-const calculateOrderAmount = (cartItems, paymentMode) => {
+const calculateOrderAmount = (cartItems) => {
   const subtotal = (cartItems || []).reduce((sum, item) => {
     let price = Number(String(item.price).replace(/[^0-9.]/g, "")) || 0;
     let discount = Number(String(item.discountPrice).replace(/[^0-9.]/g, "")) || 0;
@@ -28,10 +28,10 @@ const calculateOrderAmount = (cartItems, paymentMode) => {
   }, 0);
 
   const shippingCharge = SHIPPING_CHARGE;
-  const prepaidDiscount = paymentMode === "Prepaid" ? PREPAID_DISCOUNT_AMOUNT : 0;
-  const totalAmount = subtotal - prepaidDiscount + shippingCharge;
-
-  return { subtotal, shippingCharge, prepaidDiscount, totalAmount };
+  // const prepaidDiscount = paymentMode === "Prepaid" ? PREPAID_DISCOUNT_AMOUNT : 0;
+  // const totalAmount = subtotal - prepaidDiscount + shippingCharge;
+  const totalAmount = subtotal + shippingCharge;
+  return { subtotal, shippingCharge, totalAmount };
 };
 
 router.post("/create", async (req, res) => {
@@ -42,12 +42,12 @@ router.post("/create", async (req, res) => {
       return res.status(400).json({ success: false, message: "Cart items missing" });
     }
 
-    const { subtotal, shippingCharge, prepaidDiscount, totalAmount } =
-      calculateOrderAmount(order.cartItems, order.paymentMode);
+    const { subtotal, shippingCharge, totalAmount } =
+      calculateOrderAmount(order.cartItems);
 
     order.subtotal = subtotal;
     order.shippingCharge = shippingCharge;
-    order.prepaidDiscount = prepaidDiscount;
+    // order.prepaidDiscount = prepaidDiscount;
     order.totalAmount = totalAmount;
 
     const savedOrder = await saveOrderToFirestore(order);
