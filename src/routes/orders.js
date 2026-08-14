@@ -285,7 +285,9 @@ router.post("/guest-lookup", async (req, res) => {
         courierName: data.courierName || null,
         cartItems: data.cartItems || [],
         addressInfo: data.addressInfo || {},
-        date: data.date || data.time || null,
+        date: data.date || null,
+        time: data.time?.toDate ? data.time.toDate().toISOString() : (data.time || null),
+        deliveredAt: data.deliveredAt?.toDate ? data.deliveredAt.toDate().toISOString() : (data.deliveredAt || null),
       },
     });
   } catch (err) {
