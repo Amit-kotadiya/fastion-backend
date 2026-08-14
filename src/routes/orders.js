@@ -8,7 +8,7 @@ const {
 } = require("../services/firebaseService");
 
 const router = express.Router();
-
+const admin = require("firebase-admin");
 const SHIPPING_CHARGE = 100;
 // const PREPAID_DISCOUNT_AMOUNT = 50;
 
@@ -250,4 +250,166 @@ router.post("/:orderId/return", async (req, res) => {
     return res.status(500).json({ success: false, message: "Return failed" });
   }
 });
+
+router.post("/guest-lookup", async (req, res) => {
+  const { email, orderId } = req.body;
+
+  if (!email || !orderId) {
+    return res.status(400).json({ success: false, message: "Email aur Order ID dono chahiye" });
+  }
+
+  try {
+    const db = admin.firestore();
+    const snap = await db.collection("order")
+      .where("addressInfo.email", "==", email.trim())
+      .where("orderId", "==", orderId.trim())
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      return res.status(404).json({ success: false, message: "Order nahi mila" });
+    }
+
+    const doc = snap.docs[0];
+    const data = doc.data();
+
+    return res.json({
+      success: true,
+      order: {
+        docId: doc.id,
+        orderId: data.orderId,
+        status: data.status,
+        totalAmount: data.totalAmount,
+        shippingCharge: data.shippingCharge,
+        trackingId: data.trackingId || null,
+        courierName: data.courierName || null,
+        cartItems: data.cartItems || [],
+        addressInfo: data.addressInfo || {},
+        date: data.date || data.time || null,
+      },
+    });
+  } catch (err) {
+    console.error("Guest lookup error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.post("/cancel-request", async (req, res) => {
+  const { orderId, orderDocId, userName, userPhone, reason } = req.body;
+  if (!orderId || !orderDocId || !reason) {
+    return res.status(400).json({ success: false, message: "Missing fields" });
+  }
+  try {
+    const db = admin.firestore();
+
+    await db.collection("cancelRequests").add({
+      orderId,
+      orderDocId,
+      userName: userName || "",
+      userPhone: userPhone || "",
+      reason,
+      status: "Pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await db.collection("order").doc(orderDocId).update({
+      cancelRequested: true,
+      cancelStatus: "Pending",
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Cancel request error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.post("/return-request", async (req, res) => {
+  const { orderId, orderDocId, userName, userPhone, itemTitle, itemSizes, reason, description } = req.body;
+  if (!orderId || !orderDocId || !reason || !description) {
+    return res.status(400).json({ success: false, message: "Missing fields" });
+  }
+  try {
+    const db = admin.firestore();
+
+    await db.collection("returnRequests").add({
+      orderId,
+      orderDocId,
+      userName: userName || "",
+      userPhone: userPhone || "",
+      itemTitle: itemTitle || "",
+      itemSizes: itemSizes || {},
+      reason,
+      description,
+      status: "Pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await db.collection("order").doc(orderDocId).update({
+      returnRequested: true,
+      returnStatus: "Pending",
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Return request error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// DECREASE PRODUCT STOCK 
+router.post("/decrease-stock", async (req, res) => {
+  const { cartItems } = req.body;
+  if (!Array.isArray(cartItems) || cartItems.length === 0) {
+    return res.status(400).json({ success: false, message: "No items provided" });
+  }
+  try {
+    const db = admin.firestore();
+
+    for (const item of cartItems) {
+      const productRef = db.collection("products").doc(item.id);
+      const qty = item.quantity || 1;
+
+      await db.runTransaction(async (transaction) => {
+        const productSnap = await transaction.get(productRef);
+        if (!productSnap.exists) return;
+
+        const productData = productSnap.data();
+
+        if (productData.sizeStock) {
+          const updatedSizeStock = { ...productData.sizeStock };
+          let changed = false;
+
+          if (item.selectedSizes?.pant) {
+            const key = `pant_${item.selectedSizes.pant}`;
+            if (updatedSizeStock[key] !== undefined) {
+              const current = Number(updatedSizeStock[key]) || 0;
+              updatedSizeStock[key] = Math.max(0, current - qty);
+              changed = true;
+            }
+          }
+          if (item.selectedSizes?.shirt) {
+            const key = `shirt_${item.selectedSizes.shirt}`;
+            if (updatedSizeStock[key] !== undefined) {
+              const current = Number(updatedSizeStock[key]) || 0;
+              updatedSizeStock[key] = Math.max(0, current - qty);
+              changed = true;
+            }
+          }
+          if (changed) transaction.update(productRef, { sizeStock: updatedSizeStock });
+        } else {
+          const current = Number(productData.stock) || 0;
+          const newStock = Math.max(0, current - qty);
+          transaction.update(productRef, { stock: newStock });
+        }
+      });
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Stock decrease error:", err);
+    return res.status(500).json({ success: false, message: "Stock update failed" });
+  }
+});
+
 module.exports = router;
