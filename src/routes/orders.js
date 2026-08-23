@@ -398,6 +398,15 @@ router.post("/decrease-stock", async (req, res) => {
               changed = true;
             }
           }
+          if (item.selectedSizes?.underwear) {
+            const key = `underwear_${item.selectedSizes.underwear}`;
+
+            if (updatedSizeStock[key] !== undefined) {
+              const current = Number(updatedSizeStock[key]) || 0;
+              updatedSizeStock[key] = Math.max(0, current - qty);
+              changed = true;
+            }
+          }
           if (changed) transaction.update(productRef, { sizeStock: updatedSizeStock });
         } else {
           const current = Number(productData.stock) || 0;

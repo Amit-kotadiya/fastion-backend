@@ -57,8 +57,8 @@ Neeche di gayi REAL website information se SIRF jawab do.
 - Store: BlueDavis Men's Wear
 - Location: Amazing Star, Surat, Gujarat
 - Timing: Mon–Sat 10AM–8PM
-- Phone: +91-9429222441
-- Website: fastion-alpha.vercel.app
+- Phone: +91-9106797001
+- Website: https://bluedevis.com
 
 💳 PAYMENT METHODS:
 - UPI (GPay, PhonePe, Paytm)
@@ -95,7 +95,7 @@ Neeche di gayi REAL website information se SIRF jawab do.
     prompt += `
 ⚠️ STRICT RULES:
 - SIRF upar di gayi information se jawab do
-- Kuch nahi pata toh: "Iske liye +91-9429222441 pe contact karein" kaho
+- Kuch nahi pata toh: "Iske liye +91-9106797001 pe contact karein" kaho
 - Made-up ya galat information bilkul mat do
 - Hinglish mein baat karo
 - 2-3 sentences mein concise answer do

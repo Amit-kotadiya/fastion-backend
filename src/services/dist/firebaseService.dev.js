@@ -116,35 +116,50 @@ function updateOrderShiprocketData(orderId, updates) {
 }
 
 function updateOrderByShipmentStatus(shipmentId, updates) {
-  var snap, doc;
+  var collRef, snap, doc;
   return regeneratorRuntime.async(function updateOrderByShipmentStatus$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          _context4.next = 2;
-          return regeneratorRuntime.awrap(db.collection(collectionName).where("shiprocketShipmentId", "==", shipmentId).limit(1).get());
+          collRef = db.collection(collectionName);
+          _context4.next = 3;
+          return regeneratorRuntime.awrap(collRef.where("shiprocketShipmentId", "==", String(shipmentId)).limit(1).get());
 
-        case 2:
+        case 3:
           snap = _context4.sent;
 
-          if (!snap.empty) {
-            _context4.next = 5;
+          if (!(snap.empty && !Number.isNaN(Number(shipmentId)))) {
+            _context4.next = 8;
             break;
           }
 
+          _context4.next = 7;
+          return regeneratorRuntime.awrap(collRef.where("shiprocketShipmentId", "==", Number(shipmentId)).limit(1).get());
+
+        case 7:
+          snap = _context4.sent;
+
+        case 8:
+          if (!snap.empty) {
+            _context4.next = 11;
+            break;
+          }
+
+          console.warn("⚠️ updateOrderByShipmentStatus: no order matched shipmentId =", shipmentId);
           return _context4.abrupt("return", false);
 
-        case 5:
+        case 11:
           doc = snap.docs[0];
-          _context4.next = 8;
+          _context4.next = 14;
           return regeneratorRuntime.awrap(doc.ref.update(_objectSpread({}, updates, {
             updatedAt: new Date().toISOString()
           })));
 
-        case 8:
+        case 14:
+          console.log("✅ updateOrderByShipmentStatus: updated order", doc.id, "for shipmentId", shipmentId);
           return _context4.abrupt("return", true);
 
-        case 9:
+        case 16:
         case "end":
           return _context4.stop();
       }
