@@ -190,6 +190,43 @@ router.post("/verify", async (req, res) => {
         return res.status(500).json({ success: false, error: "Verification failed" });
     }
 });
+// POST /api/payment/create-order-for-link
+router.post('/create-order-for-link', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ success: false, message: 'Token missing' });
+
+        const linkSnap = await db.collection('orderLinks').doc(token).get();
+        if (!linkSnap.exists) {
+            return res.status(400).json({ success: false, message: 'Invalid link' });
+        }
+        const linkData = linkSnap.data();
+        if (linkData.status === 'used') {
+            return res.status(400).json({ success: false, message: 'Link already used' });
+        }
+        const amount = Number(linkData.expectedAmount);
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ success: false, message: 'Amount not set for this link' });
+        }
+
+        const razorpayOrder = await razorpay.orders.create({
+            amount: Math.round(amount * 100),
+            currency: 'INR',
+            receipt: `quickorder_${token}`,
+        });
+
+        res.json({
+            success: true,
+            orderId: razorpayOrder.id,
+            amount: razorpayOrder.amount,
+            currency: razorpayOrder.currency,
+            keyId: process.env.RAZORPAY_KEY_ID,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 // WEBHOOK - Razorpay events
 router.post("/webhook", async (req, res) => {
     try {
